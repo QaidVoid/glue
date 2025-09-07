@@ -1,0 +1,14 @@
+.{
+    .name = .glue,
+    .version = "0.1.0",
+    .fingerprint = 0xa9e83a8617d694b8, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.1",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "LICENSE",
+        "README.md",
+    },
+}
