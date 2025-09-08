@@ -292,16 +292,18 @@ fn renderInspector(app: *App) !void {
         var line_count: usize = 0;
         var displayed_lines: usize = 0;
 
+        // Skip scrolled lines
         while (line_count < app.inspector_scroll and lines.next() != null) {
             line_count += 1;
         }
 
+        // Render visible lines
         while (lines.next()) |line| {
             if (displayed_lines >= display_height) break;
 
             try term.moveTo(content_rect.y + displayed_lines, content_rect.x);
             try (Style{ .fg = .bright_black }).apply(term);
-            try term.stdout.writer().print("{:4}: ", .{line_count + 1});
+            try term.stdout.writer().print("{:4} ", .{line_count + 1});
 
             if (stage.status == .@"error" and app.inspector_view == .output) {
                 try (Style{ .fg = .red }).apply(term);
@@ -314,40 +316,55 @@ fn renderInspector(app: *App) !void {
             var remainder = line;
 
             while (remainder.len > 0) {
-                const first_char_is_space = remainder[0] == ' ';
-
-                const delimiter_pos = if (first_char_is_space) blk: {
-                    var pos: ?usize = null;
-                    for (remainder, 0..) |char, i| {
-                        if (char != ' ') {
-                            pos = i;
-                            break;
-                        }
-                    }
-                    break :blk pos;
-                } else std.mem.indexOfScalar(u8, remainder, ' ');
-
+                // Find the next break (space-delimited word or full chunk)
+                const delimiter_pos = std.mem.indexOfScalar(u8, remainder, ' ');
                 const chunk_end = delimiter_pos orelse remainder.len;
-                const chunk = remainder[0..chunk_end];
+                var chunk = remainder[0..chunk_end];
 
-                if (current_line_len + chunk.len > max_line_width and current_line_len > 0) {
-                    displayed_lines += 1;
-                    if (displayed_lines >= display_height) break;
-                    try term.moveTo(content_rect.y + displayed_lines, content_rect.x);
-                    try (Style{ .fg = .bright_black }).apply(term);
-                    try term.stdout.writeAll("      ");
-                    try (Style{ .fg = .white }).apply(term);
-                    current_line_len = 0;
+                // If the chunk is larger than the available width, split it directly
+                while (chunk.len > 0) {
+                    const space_left = max_line_width - current_line_len;
+                    const to_write = @min(space_left, chunk.len);
 
-                    if (first_char_is_space) {
-                        remainder = remainder[chunk_end..];
-                        continue;
+                    try term.stdout.writeAll(chunk[0..to_write]);
+                    current_line_len += to_write;
+
+                    if (current_line_len >= max_line_width) {
+                        displayed_lines += 1;
+                        if (displayed_lines >= display_height) break;
+
+                        try term.moveTo(content_rect.y + displayed_lines, content_rect.x);
+                        try (Style{ .fg = .bright_black }).apply(term);
+                        try term.stdout.writeAll("      ");
+                        try (Style{ .fg = .white }).apply(term);
+
+                        current_line_len = 0;
                     }
+
+                    chunk = chunk[to_write..];
                 }
 
-                try term.stdout.writeAll(chunk);
-                current_line_len += chunk.len;
-                remainder = remainder[chunk_end..];
+                if (displayed_lines >= display_height) break;
+
+                // Skip delimiter (space) if any
+                if (delimiter_pos) |pos| {
+                    remainder = remainder[pos + 1 ..];
+                    if (current_line_len < max_line_width) {
+                        try term.stdout.writeAll(" ");
+                        current_line_len += 1;
+                    } else {
+                        displayed_lines += 1;
+                        if (displayed_lines >= display_height) break;
+
+                        try term.moveTo(content_rect.y + displayed_lines, content_rect.x);
+                        try (Style{ .fg = .bright_black }).apply(term);
+                        try term.stdout.writeAll("      ");
+                        try (Style{ .fg = .white }).apply(term);
+                        current_line_len = 0;
+                    }
+                } else {
+                    remainder = remainder[chunk_end..];
+                }
             }
 
             displayed_lines += 1;

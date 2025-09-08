@@ -21,8 +21,10 @@ pub const App = struct {
     app_mutex: Mutex = .{},
     animation_tick: u8 = 0,
 
-    pub fn init(allocator: Allocator) !App {
-        return App{
+    const Self = @This();
+
+    pub fn init(allocator: Allocator) !Self {
+        return Self{
             .allocator = allocator,
             .terminal = try tui.Terminal.init(),
             .pipeline = try Pipeline.init(allocator),
@@ -30,19 +32,19 @@ pub const App = struct {
         };
     }
 
-    pub fn deinit(self: *App) void {
+    pub fn deinit(self: *Self) void {
         self.pipeline.deinit();
         self.stages_to_rerender.deinit();
         self.terminal.deinit();
     }
 
-    pub fn loadPipeline(self: *App, pipeline_str: []const u8) !void {
+    pub fn loadPipeline(self: *Self, pipeline_str: []const u8) !void {
         try self.pipeline.load(pipeline_str);
         self.needs_full_render = true;
         self.needs_redraw = true;
     }
 
-    pub fn run(self: *App) !void {
+    pub fn run(self: *Self) !void {
         while (!self.quit_requested) {
             if (self.needs_redraw) {
                 try tui.view.render(self);
@@ -64,14 +66,14 @@ pub const App = struct {
         }
     }
 
-    fn setScrollOffset(self: *App, offset: usize) bool {
+    fn setScrollOffset(self: *Self, offset: usize) bool {
         if (offset == self.scroll_offset) return false;
 
         self.scroll_offset = offset;
         return true;
     }
 
-    fn setInspectorScroll(self: *App, scroll: usize) bool {
+    fn setInspectorScroll(self: *Self, scroll: usize) bool {
         if (scroll == self.inspector_scroll) return false;
 
         self.inspector_scroll = scroll;
@@ -79,7 +81,7 @@ pub const App = struct {
         return true;
     }
 
-    fn handleInput(self: *App) !bool {
+    fn handleInput(self: *Self) !bool {
         const key_event = tui.parseKeyEvent(&self.terminal) catch return false;
         if (key_event == .unknown) return false;
 
@@ -91,7 +93,7 @@ pub const App = struct {
         return true;
     }
 
-    fn handleOverviewInput(self: *App, key: tui.KeyEvent) !void {
+    fn handleOverviewInput(self: *Self, key: tui.KeyEvent) !void {
         switch (key) {
             .char => |ch| switch (ch) {
                 'q', 'Q' => self.quit_requested = true,
@@ -162,7 +164,7 @@ pub const App = struct {
         }
     }
 
-    fn handleInspectorInput(self: *App, key: tui.KeyEvent) !void {
+    fn handleInspectorInput(self: *Self, key: tui.KeyEvent) !void {
         switch (key) {
             .char => |ch| switch (ch) {
                 'q', 'Q' => self.quit_requested = true,
@@ -217,7 +219,7 @@ pub const App = struct {
         }
     }
 
-    fn handleHelpInput(self: *App, key: tui.KeyEvent) !void {
+    fn handleHelpInput(self: *Self, key: tui.KeyEvent) !void {
         switch (key) {
             .char => |ch| switch (ch) {
                 'q', 'Q' => self.quit_requested = true,
@@ -232,7 +234,7 @@ pub const App = struct {
         }
     }
 
-    fn moveUp(self: *App) void {
+    fn moveUp(self: *Self) void {
         if (self.selected_stage > 0) {
             self.selected_stage -= 1;
             self.adjustScrollForSelection();
@@ -240,7 +242,7 @@ pub const App = struct {
         }
     }
 
-    fn moveDown(self: *App) void {
+    fn moveDown(self: *Self) void {
         if (self.selected_stage + 1 < self.pipeline.stages.items.len) {
             self.selected_stage += 1;
             self.adjustScrollForSelection();
@@ -248,7 +250,7 @@ pub const App = struct {
         }
     }
 
-    fn pageUp(self: *App) void {
+    fn pageUp(self: *Self) void {
         const page_size = (self.terminal.height - 6) / 4; // 4 lines per stage
         const scroll_offset = if (self.scroll_offset >= page_size)
             self.scroll_offset - page_size
@@ -261,7 +263,7 @@ pub const App = struct {
         }
     }
 
-    fn pageDown(self: *App) void {
+    fn pageDown(self: *Self) void {
         const page_size = (self.terminal.height - 6) / 4; // 4 lines per stage
         const max_scroll = if (self.pipeline.stages.items.len > page_size)
             self.pipeline.stages.items.len - page_size
@@ -279,7 +281,7 @@ pub const App = struct {
         }
     }
 
-    fn adjustScrollForSelection(self: *App) void {
+    fn adjustScrollForSelection(self: *Self) void {
         const visible_stages = (self.terminal.height - 6) / 4;
 
         if (self.selected_stage < self.scroll_offset) {
@@ -291,7 +293,7 @@ pub const App = struct {
         }
     }
 
-    fn adjustSelectionForScroll(self: *App) void {
+    fn adjustSelectionForScroll(self: *Self) void {
         const visible_stages = (self.terminal.height - 6) / 4;
 
         if (self.selected_stage < self.scroll_offset) {
@@ -303,7 +305,7 @@ pub const App = struct {
         }
     }
 
-    fn inspectorScrollUp(self: *App) void {
+    fn inspectorScrollUp(self: *Self) void {
         const inspector_scroll = if (self.inspector_scroll > 0)
             self.inspector_scroll - 1
         else
@@ -312,7 +314,7 @@ pub const App = struct {
         _ = self.setInspectorScroll(inspector_scroll);
     }
 
-    fn inspectorScrollDown(self: *App) void {
+    fn inspectorScrollDown(self: *Self) void {
         const stage = &self.pipeline.stages.items[self.selected_stage];
         const data = switch (self.inspector_view) {
             .input => stage.input_data,
@@ -330,7 +332,7 @@ pub const App = struct {
         _ = self.setInspectorScroll(inspector_scroll);
     }
 
-    fn inspectorPageUp(self: *App) void {
+    fn inspectorPageUp(self: *Self) void {
         const page_size = self.terminal.height - 7;
         const inspector_scroll = if (self.inspector_scroll >= page_size)
             self.inspector_scroll - page_size
@@ -340,7 +342,7 @@ pub const App = struct {
         _ = self.setInspectorScroll(inspector_scroll);
     }
 
-    fn inspectorPageDown(self: *App) void {
+    fn inspectorPageDown(self: *Self) void {
         const display_height = self.terminal.height - 7;
         const page_size = display_height;
         const stage = &self.pipeline.stages.items[self.selected_stage];
@@ -359,11 +361,11 @@ pub const App = struct {
         _ = self.setInspectorScroll(inspector_scroll);
     }
 
-    fn inspectorScrollToStart(self: *App) void {
+    fn inspectorScrollToStart(self: *Self) void {
         _ = self.setInspectorScroll(0);
     }
 
-    fn inspectorScrollToEnd(self: *App) void {
+    fn inspectorScrollToEnd(self: *Self) void {
         const display_height = self.terminal.height - 7;
         const stage = &self.pipeline.stages.items[self.selected_stage];
 
@@ -377,7 +379,7 @@ pub const App = struct {
         _ = self.setInspectorScroll(max_scroll + 1);
     }
 
-    pub fn rerunFromStage(self: *App) !void {
+    pub fn rerunFromStage(self: *Self) !void {
         if (self.pipeline.stages.items.len == 0) return;
 
         // Reset stages from selected onwards
@@ -397,7 +399,7 @@ pub const App = struct {
         try self.executePipeline(self.selected_stage);
     }
 
-    pub fn rerunPipeline(self: *App) !void {
+    pub fn rerunPipeline(self: *Self) !void {
         // Reset all stages
         for (self.pipeline.stages.items) |*stage| {
             stage.status = .pending;
@@ -417,7 +419,7 @@ pub const App = struct {
         try self.executePipeline(0);
     }
 
-    pub fn executePipeline(self: *App, start_stage: usize) !void {
+    pub fn executePipeline(self: *Self, start_stage: usize) !void {
         const ctx = self.allocator.create(PipelineContext) catch @panic("Failed to allocate PipelineContext");
         defer self.allocator.destroy(ctx);
 
@@ -432,7 +434,6 @@ pub const App = struct {
     fn pipelineThreadFn(ctx: *PipelineContext) void {
         const app = ctx.app;
         const start_stage = ctx.start_stage;
-        defer app.allocator.destroy(ctx);
 
         app.app_mutex.lock();
         app.needs_redraw = true;
@@ -474,7 +475,7 @@ pub const App = struct {
         app.app_mutex.unlock();
     }
 
-    fn saveOutput(self: *App) !void {
+    fn saveOutput(self: *Self) !void {
         if (self.pipeline.stages.items.len == 0 or self.selected_stage >= self.pipeline.stages.items.len) return;
 
         const stage = &self.pipeline.stages.items[self.selected_stage];
@@ -489,12 +490,12 @@ pub const App = struct {
         try file.writeAll(stage.output_data);
     }
 
-    fn togglePause(self: *App) !void {
+    fn togglePause(self: *Self) !void {
         // TODO: Implementation for pausing/resuming pipeline execution
         _ = self;
     }
 
-    fn hasRunningStages(self: *const App) bool {
+    fn hasRunningStages(self: *const Self) bool {
         for (self.pipeline.stages.items) |stage| {
             if (stage.status == .running) {
                 return true;
