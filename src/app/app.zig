@@ -419,6 +419,8 @@ pub const App = struct {
 
     pub fn executePipeline(self: *App, start_stage: usize) !void {
         const ctx = self.allocator.create(PipelineContext) catch @panic("Failed to allocate PipelineContext");
+        defer self.allocator.destroy(ctx);
+
         ctx.* = .{
             .app = self,
             .start_stage = start_stage,
