@@ -1,6 +1,3 @@
-const std = @import("std");
-const tui = @import("tui");
-
 pub fn copyToClipboard(allocator: std.mem.Allocator, data: []const u8, terminal: *tui.Terminal) !void {
     try terminal.disableRawMode();
     defer terminal.enableRawMode() catch {};
@@ -32,3 +29,6 @@ pub fn copyToClipboard(allocator: std.mem.Allocator, data: []const u8, terminal:
 
     // If we get here, no clipboard tool was found. Fail silently.
 }
+
+const std = @import("std");
+const tui = @import("glue").tui;

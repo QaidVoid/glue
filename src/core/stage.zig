@@ -1,6 +1,3 @@
-const std = @import("std");
-const Allocator = std.mem.Allocator;
-
 pub const Stage = struct {
     command: []const u8,
     input_data: []u8,
@@ -28,3 +25,6 @@ pub const Stage = struct {
         if (self.error_msg) |err| allocator.free(err);
     }
 };
+
+const std = @import("std");
+const Allocator = std.mem.Allocator;

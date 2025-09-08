@@ -1,8 +1,3 @@
-const std = @import("std");
-const Allocator = std.mem.Allocator;
-const ArrayList = std.ArrayList;
-const Stage = @import("core").Stage;
-
 pub const StageExecutor = struct {
     allocator: Allocator,
 
@@ -89,3 +84,8 @@ pub const StageExecutor = struct {
         }
     }
 };
+
+const std = @import("std");
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
+const Stage = @import("glue").Stage;

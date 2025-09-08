@@ -1,5 +1,3 @@
-const std = @import("std");
-
 pub const KeyBinding = struct {
     key: []const u8,
     description: []const u8,
@@ -19,3 +17,5 @@ pub const keymap = [_]KeyBinding{
     .{ .key = "q or Ctrl+C", .description = "Quit application" },
     .{ .key = "Space", .description = "Pause/resume execution" },
 };
+
+const std = @import("std");

@@ -1,6 +1,3 @@
-const std = @import("std");
-const Terminal = @import("tui").Terminal;
-
 pub const MouseButton = enum {
     left,
     middle,
@@ -143,3 +140,6 @@ pub fn parseKeyEvent(terminal: *Terminal) !KeyEvent {
         else => KeyEvent{ .char = key.? },
     };
 }
+
+const std = @import("std");
+const Terminal = @import("glue").tui.Terminal;

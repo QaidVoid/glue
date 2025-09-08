@@ -6,24 +6,10 @@ pub fn build(b: *std.Build) void {
         .preferred_optimize_mode = .ReleaseSmall,
     });
 
-    const core_mod = b.createModule(.{
-        .root_source_file = b.path("src/core/main.zig"),
+    const glue = b.createModule(.{
+        .root_source_file = b.path("src/glue.zig"),
     });
-    const tui_mod = b.createModule(.{
-        .root_source_file = b.path("src/tui/main.zig"),
-    });
-
-    const app_mod = b.createModule(.{
-        .root_source_file = b.path("src/app/main.zig"),
-    });
-    app_mod.addImport("core", core_mod);
-    app_mod.addImport("tui", tui_mod);
-
-    core_mod.addImport("core", core_mod);
-
-    tui_mod.addImport("core", core_mod);
-    tui_mod.addImport("app", app_mod);
-    tui_mod.addImport("tui", tui_mod);
+    glue.addImport("glue", glue);
 
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
@@ -33,9 +19,7 @@ pub fn build(b: *std.Build) void {
         // .single_threaded = true,
         // .unwind_tables = .none,
     });
-    exe_mod.addImport("app", app_mod);
-    exe_mod.addImport("core", core_mod);
-    exe_mod.addImport("tui", tui_mod);
+    exe_mod.addImport("glue", glue);
 
     const exe = b.addExecutable(.{
         .name = "glue",

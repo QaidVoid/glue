@@ -1,5 +1,3 @@
-const std = @import("std");
-
 pub const Terminal = struct {
     original_termios: std.posix.termios,
     width: u16,
@@ -161,3 +159,5 @@ pub const Terminal = struct {
         return buffer[0..len];
     }
 };
+
+const std = @import("std");

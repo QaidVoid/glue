@@ -1,6 +1,3 @@
-const std = @import("std");
-const Terminal = @import("tui").Terminal;
-
 pub const Color = enum {
     black,
     red,
@@ -213,3 +210,6 @@ pub fn drawBox(term: *Terminal, rect: Rect, title: ?[]const u8, style: Style, bo
 
     try (Style{ .fg = .reset }).apply(term);
 }
+
+const std = @import("std");
+const Terminal = @import("glue").tui.Terminal;

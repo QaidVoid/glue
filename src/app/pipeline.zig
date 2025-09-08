@@ -1,12 +1,3 @@
-const std = @import("std");
-const core = @import("core");
-const Stage = core.Stage;
-const PipelineParser = core.PipelineParser;
-const StageExecutor = core.StageExecutor;
-
-const Allocator = std.mem.Allocator;
-const ArrayList = std.ArrayList;
-
 pub const Pipeline = struct {
     allocator: Allocator,
     stages: ArrayList(Stage),
@@ -45,3 +36,12 @@ pub const Pipeline = struct {
         }
     }
 };
+
+const std = @import("std");
+const glue = @import("glue");
+const Stage = glue.Stage;
+const PipelineParser = glue.PipelineParser;
+const StageExecutor = glue.StageExecutor;
+
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;

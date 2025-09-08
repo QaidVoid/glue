@@ -1,6 +1,3 @@
-const std = @import("std");
-const app = @import("app");
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
     defer _ = gpa.deinit();
@@ -15,7 +12,7 @@ pub fn main() !void {
         return;
     }
 
-    var app_instance = app.App.init(allocator) catch |err| {
+    var app_instance = App.init(allocator) catch |err| {
         std.debug.print("Failed to initialize TUI: {}\n", .{err});
         std.debug.print("Your terminal might not support the required features.\n", .{});
         return;
@@ -37,6 +34,9 @@ pub fn main() !void {
     try app_instance.run();
 }
 
-fn executePipelineAsync(app_ptr: *app.App) !void {
+fn executePipelineAsync(app_ptr: *App) !void {
     try app_ptr.executePipeline(0);
 }
+
+const std = @import("std");
+const App = @import("glue").App;

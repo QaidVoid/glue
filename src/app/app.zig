@@ -1,15 +1,3 @@
-const std = @import("std");
-const Thread = std.Thread;
-const Mutex = std.Thread.Mutex;
-const tui = @import("tui");
-const core = @import("core");
-const Pipeline = @import("./pipeline.zig").Pipeline;
-const Stage = core.Stage;
-const utils = tui.utils;
-
-const Allocator = std.mem.Allocator;
-const ArrayList = std.ArrayList;
-
 const PipelineContext = struct {
     app: *App,
     start_stage: usize,
@@ -192,7 +180,7 @@ pub const App = struct {
                         .input => stage.input_data,
                         .output => if (stage.status == .@"error") stage.error_msg.? else stage.output_data,
                     };
-                    utils.copyToClipboard(self.allocator, data, &self.terminal) catch {};
+                    tui.utils.copyToClipboard(self.allocator, data, &self.terminal) catch {};
                 },
                 else => {},
             },
@@ -513,3 +501,14 @@ pub const App = struct {
         return false;
     }
 };
+
+const std = @import("std");
+const Thread = std.Thread;
+const Mutex = std.Thread.Mutex;
+const glue = @import("glue");
+const Pipeline = glue.Pipeline;
+const Stage = glue.Stage;
+const tui = glue.tui;
+
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;

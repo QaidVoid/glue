@@ -1,15 +1,3 @@
-const std = @import("std");
-const app_module = @import("app");
-const core = @import("core");
-const tui = @import("tui");
-
-const App = app_module.App;
-const Stage = core.Stage;
-const Terminal = tui.Terminal;
-const Style = tui.Style;
-const Color = tui.Color;
-const keymap = @import("./keymap.zig");
-
 pub fn render(app: *App) !void {
     switch (app.view_mode) {
         .overview => try renderOverview(app),
@@ -486,3 +474,15 @@ fn getHourglassFrame(tick: u8) []const u8 {
     const frames = [_][]const u8{ "", "", "" };
     return frames[tick % frames.len];
 }
+
+const std = @import("std");
+const glue = @import("glue");
+
+const tui = glue.tui;
+
+const App = glue.App;
+const Stage = glue.Stage;
+const Terminal = tui.Terminal;
+const Style = tui.Style;
+const Color = tui.Color;
+const keymap = @import("./keymap.zig");

@@ -1,7 +1,3 @@
-const std = @import("std");
-const Allocator = std.mem.Allocator;
-const ArrayList = std.ArrayList;
-
 pub const PipelineParser = struct {
     allocator: Allocator,
 
@@ -95,3 +91,7 @@ pub const PipelineParser = struct {
         return stages;
     }
 };
+
+const std = @import("std");
+const Allocator = std.mem.Allocator;
+const ArrayList = std.ArrayList;
