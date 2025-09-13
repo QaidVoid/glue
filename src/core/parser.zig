@@ -12,7 +12,7 @@ pub const PipelineParser = struct {
     }
 
     pub fn parseStages(self: *Self, pipeline: []const u8) !ArrayList([]const u8) {
-        var stages = ArrayList([]const u8).init(self.allocator);
+        var stages: ArrayList([]const u8) = .empty;
 
         var i: usize = 0;
         var stage_start: usize = 0;
@@ -69,7 +69,7 @@ pub const PipelineParser = struct {
                         const stage = std.mem.trim(u8, pipeline[stage_start..i], " \t\n\\");
                         if (stage.len > 0) {
                             const stage_copy = try self.allocator.dupe(u8, stage);
-                            try stages.append(stage_copy);
+                            try stages.append(self.allocator, stage_copy);
                         }
                         stage_start = i + 1;
                     }
@@ -85,7 +85,7 @@ pub const PipelineParser = struct {
         const final_stage = std.mem.trim(u8, pipeline[stage_start..], " \t\n\\");
         if (final_stage.len > 0) {
             const stage_copy = try self.allocator.dupe(u8, final_stage);
-            try stages.append(stage_copy);
+            try stages.append(self.allocator, stage_copy);
         }
 
         return stages;

@@ -1,6 +1,6 @@
 pub const Pipeline = struct {
     allocator: Allocator,
-    stages: ArrayList(Stage),
+    stages: ArrayList(Stage) = .empty,
     parser: PipelineParser,
     executor: StageExecutor,
 
@@ -9,7 +9,6 @@ pub const Pipeline = struct {
     pub fn init(allocator: Allocator) !Self {
         return Self{
             .allocator = allocator,
-            .stages = ArrayList(Stage).init(allocator),
             .parser = PipelineParser.init(allocator),
             .executor = StageExecutor.init(allocator),
         };
@@ -19,7 +18,7 @@ pub const Pipeline = struct {
         for (self.stages.items) |*stage| {
             stage.deinit(self.allocator);
         }
-        self.stages.deinit();
+        self.stages.deinit(self.allocator);
         self.parser.deinit();
         self.executor.deinit();
     }
@@ -27,12 +26,12 @@ pub const Pipeline = struct {
     pub fn load(self: *Self, pipeline_str: []const u8) !void {
         // The pipeline string is first parsed into a series of individual command strings.
         // Each of these commands will become a stage in the pipeline.
-        const stage_commands = try self.parser.parseStages(pipeline_str);
-        defer stage_commands.deinit();
+        var stage_commands = try self.parser.parseStages(pipeline_str);
+        defer stage_commands.deinit(self.allocator);
 
         for (stage_commands.items) |cmd| {
             const stage = Stage.init(cmd);
-            try self.stages.append(stage);
+            try self.stages.append(self.allocator, stage);
         }
     }
 };

@@ -167,7 +167,7 @@ fn renderStage(app: *App, stage: *const Stage, y: u16, stage_idx: usize, is_sele
     try term.stdout.writeAll(status_char);
     try (tui.Style{ .fg = .white }).apply(term);
 
-    try term.stdout.writer().print(" {s}", .{stage.command});
+    try term.stdout.print(" {s}", .{stage.command});
 
     const used_space = 2 + 1 + stage.command.len; // emoji(2) + space(1) + command
     if (content_rect.width > used_space) {
@@ -229,11 +229,11 @@ fn renderInspector(app: *App) !void {
 
     try term.moveTo(0, 0);
     try (Style{ .fg = .bright_cyan, .bold = true }).apply(term);
-    try term.stdout.writer().print("🔍 DATA INSPECTOR - Stage {} of {}", .{ app.selected_stage + 1, app.pipeline.stages.items.len });
+    try term.stdout.print("🔍 DATA INSPECTOR - Stage {} of {}", .{ app.selected_stage + 1, app.pipeline.stages.items.len });
 
     try term.moveTo(1, 0);
     try (Style{ .fg = .white }).apply(term);
-    try term.stdout.writer().print("Command: {s}", .{stage.command});
+    try term.stdout.print("Command: {s}", .{stage.command});
 
     try term.moveTo(3, 2);
     const input_style = if (app.inspector_view == .input)
@@ -303,7 +303,7 @@ fn renderInspector(app: *App) !void {
 
             try term.moveTo(content_rect.y + displayed_lines, content_rect.x);
             try (Style{ .fg = .bright_black }).apply(term);
-            try term.stdout.writer().print("{:4} ", .{line_count + 1});
+            try term.stdout.print("{:4} ", .{line_count + 1});
 
             if (stage.status == .@"error" and app.inspector_view == .output) {
                 try (Style{ .fg = .red }).apply(term);
@@ -396,9 +396,9 @@ fn renderHelp(app: *App) !void {
     for (help_items) |item| {
         try term.moveTo(y, 4);
         try (Style{ .fg = .bright_yellow, .bold = true }).apply(term);
-        try term.stdout.writer().print("{s:<15}", .{item.key});
+        try term.stdout.print("{s:<15}", .{item.key});
         try (Style{ .fg = .white }).apply(term);
-        try term.stdout.writer().print(" - {s}", .{item.description});
+        try term.stdout.print(" - {s}", .{item.description});
         y += 1;
     }
 

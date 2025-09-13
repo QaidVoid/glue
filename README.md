@@ -31,7 +31,7 @@ glue "cat data.csv | grep 'some value' | wc -l"
 
 ## Building
 
-To build from source, you need the Zig compiler (0.14.1).
+To build from source, you need the Zig compiler (0.15.1).
 
 ```sh
 zig build

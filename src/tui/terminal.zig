@@ -2,8 +2,8 @@ pub const Terminal = struct {
     original_termios: std.posix.termios,
     width: u16,
     height: u16,
-    stdin: std.fs.File,
-    stdout: std.fs.File,
+    stdin: File,
+    stdout: StdOut,
 
     const Self = @This();
 
@@ -15,8 +15,8 @@ pub const Terminal = struct {
             .original_termios = original,
             .width = 80,
             .height = 24,
-            .stdin = std.io.getStdIn(),
-            .stdout = std.io.getStdOut(),
+            .stdin = File.stdin(),
+            .stdout = StdOut.init(),
         };
 
         errdefer terminal.deinit();
@@ -130,7 +130,7 @@ pub const Terminal = struct {
     }
 
     pub fn moveTo(self: *Self, row: u64, col: u64) !void {
-        try self.stdout.writer().print("\x1B[{};{}H", .{ row + 1, col + 1 });
+        try self.stdout.print("\x1B[{};{}H", .{ row + 1, col + 1 });
     }
 
     pub fn readKey(self: *Self) !?u8 {
@@ -161,3 +161,5 @@ pub const Terminal = struct {
 };
 
 const std = @import("std");
+const File = std.fs.File;
+const StdOut = @import("glue").StdOut;

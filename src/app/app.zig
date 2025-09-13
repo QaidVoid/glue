@@ -17,7 +17,7 @@ pub const App = struct {
     needs_redraw: bool = true,
     needs_full_render: bool = true,
     last_render_hash: u64 = 0,
-    stages_to_rerender: ArrayList(usize),
+    stages_to_rerender: ArrayList(usize) = .empty,
     app_mutex: Mutex = .{},
     animation_tick: u8 = 0,
 
@@ -28,13 +28,12 @@ pub const App = struct {
             .allocator = allocator,
             .terminal = try tui.Terminal.init(),
             .pipeline = try Pipeline.init(allocator),
-            .stages_to_rerender = ArrayList(usize).init(allocator),
         };
     }
 
     pub fn deinit(self: *Self) void {
         self.pipeline.deinit();
-        self.stages_to_rerender.deinit();
+        self.stages_to_rerender.deinit(self.allocator);
         self.terminal.deinit();
     }
 
@@ -54,11 +53,11 @@ pub const App = struct {
             const input_handled = try self.handleInput();
 
             if (!input_handled and !self.needs_redraw) {
-                std.time.sleep(50_000_000);
+                std.Thread.sleep(50_000_000);
             }
 
             if (self.hasRunningStages()) {
-                std.time.sleep(50_000_000);
+                std.Thread.sleep(50_000_000);
                 try tui.view.render(self);
             }
 
@@ -428,10 +427,10 @@ pub const App = struct {
             .start_stage = start_stage,
         };
 
-        _ = try Thread.spawn(.{}, pipelineThreadFn, .{ctx});
+        _ = try Thread.spawn(.{}, pipelineThreadFn, .{self.allocator, ctx});
     }
 
-    fn pipelineThreadFn(ctx: *PipelineContext) void {
+    fn pipelineThreadFn(allocator: Allocator, ctx: *PipelineContext) void {
         const app = ctx.app;
         const start_stage = ctx.start_stage;
 
@@ -450,7 +449,7 @@ pub const App = struct {
             app.app_mutex.lock();
             stage.status = .running;
             app.needs_redraw = true;
-            _ = app.stages_to_rerender.append(i) catch {};
+            _ = app.stages_to_rerender.append(allocator, i) catch {};
             app.app_mutex.unlock();
 
             app.pipeline.executor.executeStage(stage, current_data) catch {
@@ -463,11 +462,11 @@ pub const App = struct {
 
             app.app_mutex.lock();
             app.needs_redraw = true;
-            _ = app.stages_to_rerender.append(i) catch {};
+            _ = app.stages_to_rerender.append(allocator, i) catch {};
             app.app_mutex.unlock();
 
             // small delay to show the transition
-            std.time.sleep(50_000_000);
+            std.Thread.sleep(50_000_000);
         }
 
         app.app_mutex.lock();

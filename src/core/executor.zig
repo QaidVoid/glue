@@ -31,34 +31,41 @@ pub const StageExecutor = struct {
             child.stdin = null;
         }
 
-        var output = ArrayList(u8).init(self.allocator);
-        defer output.deinit();
+        var output: ArrayList(u8) = .empty;
+        defer output.deinit(self.allocator);
 
-        var error_output = ArrayList(u8).init(self.allocator);
-        defer error_output.deinit();
+        var error_output: ArrayList(u8) = .empty;
+        defer error_output.deinit(self.allocator);
 
         // The standard output of the child process is read in a loop until no more
         // data is available. This captured output becomes the input for the next stage
         // in the pipeline. A buffer is used to read the output in chunks.
         if (child.stdout) |stdout| {
-            const reader = stdout.reader();
+            var internal_buf: [4096]u8 = undefined;
+            var reader = stdout.reader(&internal_buf);
+            reader.mode = .streaming;
+
+            var read_buffer: [4096]u8 = undefined;
             while (true) {
-                var buffer: [4096]u8 = undefined;
-                const bytes_read = try reader.read(&buffer);
+                const bytes_read = reader.read(&read_buffer) catch 0;
                 if (bytes_read == 0) break;
-                try output.appendSlice(buffer[0..bytes_read]);
+                try output.appendSlice(self.allocator, read_buffer[0..bytes_read]);
             }
+
             stdout.close();
             child.stdout = null;
         }
 
         if (child.stderr) |stderr| {
-            const reader = stderr.reader();
+            var buffer: [4096]u8 = undefined;
+            var reader = stderr.reader(&buffer);
+            reader.mode = .streaming;
+
+            var read_buffer: [4096]u8 = undefined;
             while (true) {
-                var buffer: [4096]u8 = undefined;
-                const bytes_read = try reader.read(&buffer);
+                const bytes_read = reader.read(&read_buffer) catch 0;
                 if (bytes_read == 0) break;
-                try error_output.appendSlice(buffer[0..bytes_read]);
+                try error_output.appendSlice(self.allocator, read_buffer[0..bytes_read]);
             }
             stderr.close();
             child.stderr = null;
@@ -68,14 +75,14 @@ pub const StageExecutor = struct {
         const end_time = std.time.milliTimestamp();
 
         stage.input_data = try self.allocator.dupe(u8, input);
-        stage.output_data = try output.toOwnedSlice();
+        stage.output_data = try output.toOwnedSlice(self.allocator);
         stage.execution_time = @intCast(end_time - start_time);
         stage.data_size = stage.output_data.len;
 
         if (term != .Exited or term.Exited != 0) {
             stage.status = .@"error";
             if (error_output.items.len > 0) {
-                stage.error_msg = try error_output.toOwnedSlice();
+                stage.error_msg = try error_output.toOwnedSlice(self.allocator);
             } else {
                 stage.error_msg = try self.allocator.dupe(u8, "Command failed");
             }
